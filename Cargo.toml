@@ -1,11 +1,32 @@
 [package]
-name = "gitbook2text-rs"
-version = "0.2.2-alpha"
-edition = "2024"
+name = "gitbook2text"
+version = "0.2.2"
+edition = "2021"
+authors = ["MAXIMILIEN GRZECZKA maximilien.grzeczka@epitech.eu"]
+description = "A CLI tool to download GitBook pages and convert them to markdown and text"
+documentation = "https://docs.rs/gitbook2text"
+homepage = "https://github.com/Maki-Grz/gitbook2text"
+repository = "https://github.com/Maki-Grz/gitbook2text"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+keywords = ["gitbook", "markdown", "converter", "cli", "downloader"]
+categories = ["command-line-utilities", "text-processing"]
+rust-version = "1.91"
 
 [dependencies]
-tokio = { version = "1.47.1", features = ["fs", "rt", "rt-multi-thread", "macros"] }
-futures = "0.3.31"
-reqwest = "0.12.23"
-pulldown-cmark = "0.13.0"
-regex = "1.11.2"
+tokio = { version = "1.47", features = ["fs", "rt", "rt-multi-thread", "macros"] }
+futures = "0.3"
+reqwest = "0.12"
+pulldown-cmark = "0.13"
+regex = "1.11"
+
+[dev-dependencies]
+tempfile = "3.12"
+
+[[bin]]
+name = "gitbook2text"
+path = "src/main.rs"
+
+[lib]
+name = "gitbook2text"
+path = "src/lib.rs"

@@ -1,34 +1,98 @@
-# gitbook2text-rs
+# gitbook2text
 
-A fast Rust tool that reads GitBook links from a text file, appends `.md` to each URL, downloads all pages concurrently, and converts the content to clean plain text ready for Retrieval-Augmented Generation (RAG).
+[![Crates.io](https://img.shields.io/crates/v/gitbook2text.svg)](https://crates.io/crates/gitbook2text)
+[![Documentation](https://docs.rs/gitbook2text/badge.svg)](https://docs.rs/gitbook2text)
+[![License](https://img.shields.io/crates/l/gitbook2text.svg)](https://github.com/Maki-Grz/gitbook2text#license)
 
-## Why
+Un outil CLI et une bibliothèque Rust pour télécharger des pages GitBook et les convertir en markdown et texte brut.
 
-RAG works best with normalized, text-only corpora. GitBook sites are great sources, but the raw pages often need consistent fetching and cleanup. This tool automates that workflow end-to-end.
+## 🚀 Installation
 
-## Features
-
-- Reads URLs from a plain `.txt` file (one per line)
-- Automatically appends `.md` to each GitBook link
-- Concurrent, rate-limited downloads with retries
-- Saves original Markdown and normalized plain-text
-- Deterministic file naming and idempotent runs
-- Optional URL deduplication and domain allowlist
-
-## How it works
-
-1. Load URLs from `input/links.txt`.
-2. Normalize each URL and append `.md`.
-3. Fetch content with backoff + retry.
-4. Write raw Markdown to `data/md/`.
-5. Convert Markdown → plain text and write to `data/text/`.
-6. Emit a manifest (`manifest.jsonl`) with URL, status, paths, and hash.
-
-## Installation
+### En tant qu'outil CLI
 
 ```bash
-# Rust 1.75+ recommended
-rustup update
-git clone https://github.com/<you>/<repo-name>.git
-cd <repo-name>
-cargo build --release
+cargo install gitbook2text
+```
+
+### En tant que dépendance
+
+Ajoutez ceci à votre `Cargo.toml`:
+
+```toml
+[dependencies]
+gitbook2text = "0.2"
+```
+
+## 📖 Usage
+
+### CLI
+
+1. Créez un fichier `links.txt` contenant les URLs des pages GitBook (une par ligne):
+
+```text
+https://docs.example.com/introduction
+https://docs.example.com/getting-started
+```
+
+2. Exécutez la commande:
+
+```bash
+gitbook2text
+```
+
+Les fichiers seront sauvegardés dans:
+- `data/md/` - Fichiers markdown originaux
+- `data/txt/` - Fichiers texte nettoyés
+
+### Bibliothèque
+
+```rust
+use gitbook2text::{download_page, markdown_to_text, txt_sanitize};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let url = "https://docs.example.com/page.md";
+    
+    // Télécharger la page
+    let content = download_page(url).await?;
+    
+    // Convertir en texte
+    let text = markdown_to_text(&content);
+    
+    // Nettoyer le texte
+    let cleaned = txt_sanitize(&text);
+    
+    println!("{}", cleaned);
+    Ok(())
+}
+```
+
+## 🔧 Fonctionnalités
+
+- ✅ Téléchargement concurrent de multiples pages
+- ✅ Conversion markdown vers texte brut
+- ✅ Nettoyage des balises GitBook spéciales
+- ✅ Support des blocs de code avec titres
+- ✅ Normalisation des espaces et caractères
+
+## 📝 API Documentation
+
+Pour la documentation complète de l'API, visitez [docs.rs/gitbook2text](https://docs.rs/gitbook2text).
+
+## 🤝 Contribuer
+
+Les contributions sont les bienvenues! N'hésitez pas à ouvrir une issue ou une pull request.
+
+## 📄 License
+
+Ce projet est sous double licence MIT ou Apache-2.0, à votre choix.
+
+- MIT License ([LICENSE-MIT](LICENSE-MIT) ou http://opensource.org/licenses/MIT)
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) ou http://www.apache.org/licenses/LICENSE-2.0)
+
+## 🔗 Liens
+
+- [Crates.io](https://crates.io/crates/gitbook2text)
+- [Documentation](https://docs.rs/gitbook2text)
+- [Repository](https://github.com/Maki-Grz/gitbook2text)
+- [Issues](https://github.com/Maki-Grz/gitbook2text/issues)
