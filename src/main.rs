@@ -1,27 +1,75 @@
-use futures::StreamExt;
+use clap::{Parser, Subcommand};
 use futures::stream::FuturesUnordered;
+use futures::StreamExt;
+use gitbook2text::{crawl_and_save, extract_gitbook_links, is_gitbook};
 use gitbook2text::{download_page, markdown_to_text, save_markdown, save_text, txt_sanitize};
 use std::collections::HashSet;
 use std::fs;
 use std::process;
 
+#[derive(Parser)]
+#[command(name = "gitbook2text")]
+#[command(author, version, about, long_about = None)]
+struct Cli {
+    #[command(subcommand)]
+    command: Option<Commands>,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    Crawl {
+        #[arg(value_name = "URL")]
+        url: String,
+
+        #[arg(short, long, default_value = "links.txt")]
+        output: String,
+    },
+
+    Download {
+        #[arg(short, long, default_value = "links.txt")]
+        input: String,
+    },
+
+    All {
+        #[arg(value_name = "URL")]
+        url: String,
+    },
+}
+
 #[tokio::main]
 async fn main() {
-    if let Err(e) = run().await {
-        eprintln!("Erreur: {}", e);
+    let cli = Cli::parse();
+
+    let result = match cli.command {
+        Some(Commands::Crawl { url, output }) => crawl_command(&url, &output).await,
+        Some(Commands::Download { input }) => download_command(&input).await,
+        Some(Commands::All { url }) => all_command(&url).await,
+        None => download_command("links.txt").await,
+    };
+
+    if let Err(e) = result {
+        eprintln!("❌ Erreur: {}", e);
         process::exit(1);
     }
 }
 
-async fn run() -> Result<(), Box<dyn std::error::Error>> {
-    let content = fs::read_to_string("links.txt").map_err(|e| {
+async fn crawl_command(url: &str, output: &str) -> Result<(), Box<dyn std::error::Error>> {
+    println!("🕷️  Mode Crawl");
+    crawl_and_save(url, output).await?;
+    Ok(())
+}
+
+async fn download_command(input: &str) -> Result<(), Box<dyn std::error::Error>> {
+    println!("📥 Mode Téléchargement");
+
+    let content = fs::read_to_string(input).map_err(|e| {
         format!(
-            "Impossible de lire links.txt: {}. Assurez-vous que le fichier existe.",
-            e
+            "Impossible de lire {}: {}. Utilisez 'gitbook2text crawl <URL>' pour générer le fichier.",
+            input, e
         )
     })?;
 
-    let mut urls: HashSet<String> = content
+    let urls: HashSet<String> = content
         .lines()
         .map(|l| l.trim())
         .filter(|l| !l.is_empty())
@@ -29,15 +77,42 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
         .collect();
 
     if urls.is_empty() {
-        return Err("Aucune URL trouvée dans links.txt".into());
+        return Err(format!("Aucune URL trouvée dans {}", input).into());
     }
 
+    download_pages(urls).await
+}
+
+async fn all_command(url: &str) -> Result<(), Box<dyn std::error::Error>> {
+    println!("🚀 Mode Complet: Crawl + Téléchargement");
+
+    println!("\n📍 Étape 1: Crawling");
+    println!("🔍 Vérification que {} est un GitBook...", url);
+
+    if !is_gitbook(url).await? {
+        return Err(format!("⚠️  {} ne semble pas être un site GitBook", url).into());
+    }
+
+    println!("✅ GitBook détecté!");
+    println!("🕷️  Extraction des liens...");
+
+    let links = extract_gitbook_links(url).await?;
+
+    println!("✅ {} page(s) trouvée(s)", links.len());
+
+    println!("\n📍 Étape 2: Téléchargement");
+    download_pages(links.into_iter().collect()).await
+}
+
+async fn download_pages(mut urls: HashSet<String>) -> Result<(), Box<dyn std::error::Error>> {
     println!("📥 Téléchargement de {} page(s)...", urls.len());
 
     let new_urls_with_md = urls
         .drain()
         .map(|mut u| {
-            u.push_str(".md");
+            if !u.ends_with(".md") {
+                u.push_str(".md");
+            }
             u
         })
         .collect();
@@ -84,7 +159,10 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
     println!("  ❌ Erreurs: {}", error_count);
 
     if error_count > 0 {
-        return Err(format!("{} page(s) n'ont pas pu être téléchargées", error_count).into());
+        println!(
+            "\n⚠️  {} page(s) n'ont pas pu être téléchargées",
+            error_count
+        );
     }
 
     Ok(())

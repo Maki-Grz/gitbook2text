@@ -77,7 +77,7 @@ pub async fn save_markdown(url: &str, content: &str) -> Result<(), Box<dyn std::
 /// assert_eq!(filename, "https___example.com_path_to_page");
 /// ```
 pub fn url_to_filename(url: &str) -> String {
-    url.replace('/', "_").replace(':', "_")
+    url.replace(['/', ':'], "_")
 }
 
 /// Convertit le markdown en texte brut
