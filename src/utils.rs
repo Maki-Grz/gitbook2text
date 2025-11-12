@@ -2,11 +2,11 @@ use pulldown_cmark::{Event, Parser};
 use regex::Regex;
 use tokio::fs;
 
-/// Télécharge le contenu d'une page depuis une URL
+/// Download the content of a page from a URL
 ///
 /// # Arguments
 ///
-/// * `url` - L'URL de la page à télécharger
+/// * `url` - The URL of the page to download
 ///
 /// # Exemples
 ///
@@ -21,23 +21,23 @@ use tokio::fs;
 /// }
 /// ```
 ///
-/// # Erreurs
+/// # Errors
 ///
-/// Retourne une erreur si la requête HTTP échoue ou si la réponse ne peut pas être lue
+/// Returns an error if the HTTP request fails or if the response cannot be read
 pub async fn download_page(url: &str) -> Result<String, Box<dyn std::error::Error>> {
     let resp = reqwest::get(url).await?;
     let text = resp.text().await?;
     Ok(text)
 }
 
-/// Sauvegarde le contenu markdown dans un fichier
+/// Save the markdown content to a file
 ///
-/// Le fichier sera créé dans le répertoire `data/md/` avec un nom basé sur l'URL
+/// The file will be created in the `data/md/` directory with a name based on the URL
 ///
 /// # Arguments
 ///
-/// * `url` - L'URL source (utilisée pour générer le nom de fichier)
-/// * `content` - Le contenu markdown à sauvegarder
+/// * `url` - The source URL (used to generate the file name)
+/// * `content` - The markdown content to save
 ///
 /// # Exemples
 ///
@@ -51,22 +51,22 @@ pub async fn download_page(url: &str) -> Result<String, Box<dyn std::error::Erro
 /// }
 /// ```
 ///
-/// # Erreurs
+/// # Errors
 ///
-/// Retourne une erreur si l'écriture du fichier échoue
+/// Returns an error if the file write fails
 pub async fn save_markdown(url: &str, content: &str) -> Result<(), Box<dyn std::error::Error>> {
     let filename = url_to_filename(url) + ".md";
     fs::write(format!("data/md/{}", filename), content).await?;
     Ok(())
 }
 
-/// Convertit une URL en nom de fichier sûr
+/// Converts a URL into a safe filename
 ///
-/// Remplace les caractères `/` et `:` par des underscores
+/// Replaces the characters `/` and `:` with underscores
 ///
 /// # Arguments
 ///
-/// * `url` - L'URL à convertir
+/// * `url` - The URL to convert
 ///
 /// # Exemples
 ///
@@ -80,13 +80,13 @@ pub fn url_to_filename(url: &str) -> String {
     url.replace(['/', ':'], "_")
 }
 
-/// Convertit le markdown en texte brut
+/// Converts markdown to plain text
 ///
-/// Extrait le texte des événements markdown en ignorant la mise en forme
+/// Extracts text from markdown events, ignoring formatting
 ///
 /// # Arguments
 ///
-/// * `md` - Le contenu markdown à convertir
+/// * `md` - The markdown content to convert
 ///
 /// # Exemples
 ///
@@ -114,14 +114,14 @@ pub fn markdown_to_text(md: &str) -> String {
     text
 }
 
-/// Nettoie et sanitise le texte en retirant les balises GitBook spéciales
+/// Cleans and sanitizes the text by removing special GitBook tags
 ///
-/// Retire les balises `{% code %}`, `{% endcode %}` et autres balises spéciales GitBook,
-/// normalise les espaces et retire les tirets et guillemets.
+/// Removes `{% code %}`, `{% endcode %}`, and other special GitBook tags,
+/// normalizes spaces, and removes dashes and quotation marks.
 ///
 /// # Arguments
 ///
-/// * `txt` - Le texte à nettoyer
+/// * `txt` - The text to clean
 ///
 /// # Exemples
 ///
@@ -164,14 +164,14 @@ pub fn txt_sanitize(txt: &str) -> String {
     result.trim().to_string()
 }
 
-/// Sauvegarde le contenu texte dans un fichier
+/// Saves the text content to a file
 ///
-/// Le fichier sera créé dans le répertoire `data/txt/` avec un nom basé sur l'URL
+/// The file will be created in the `data/txt/` directory with a name based on the URL
 ///
 /// # Arguments
 ///
-/// * `url` - L'URL source (utilisée pour générer le nom de fichier)
-/// * `content` - Le contenu texte à sauvegarder
+/// * `url` - The source URL (used to generate the file name)
+/// * `content` - The text content to save
 ///
 /// # Exemples
 ///
@@ -185,9 +185,9 @@ pub fn txt_sanitize(txt: &str) -> String {
 /// }
 /// ```
 ///
-/// # Erreurs
+/// # Errors
 ///
-/// Retourne une erreur si l'écriture du fichier échoue
+/// Returns an error if writing the file fails
 pub async fn save_text(url: &str, content: &str) -> Result<(), Box<dyn std::error::Error>> {
     let filename = url_to_filename(url) + ".txt";
     fs::write(format!("data/txt/{}", filename), content).await?;

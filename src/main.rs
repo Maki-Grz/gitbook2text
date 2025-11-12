@@ -48,23 +48,23 @@ async fn main() {
     };
 
     if let Err(e) = result {
-        eprintln!("❌ Erreur: {}", e);
+        eprintln!("❌ Error: {}", e);
         process::exit(1);
     }
 }
 
 async fn crawl_command(url: &str, output: &str) -> Result<(), Box<dyn std::error::Error>> {
-    println!("🕷️  Mode Crawl");
+    println!("🕷️ Crawl Mode");
     crawl_and_save(url, output).await?;
     Ok(())
 }
 
 async fn download_command(input: &str) -> Result<(), Box<dyn std::error::Error>> {
-    println!("📥 Mode Téléchargement");
+    println!("📥 Download Mode");
 
     let content = fs::read_to_string(input).map_err(|e| {
         format!(
-            "Impossible de lire {}: {}. Utilisez 'gitbook2text crawl <URL>' pour générer le fichier.",
+            "Can't read file {} : {}. You can use 'gitbook2text crawl <URL>' to generate the file.",
             input, e
         )
     })?;
@@ -77,35 +77,35 @@ async fn download_command(input: &str) -> Result<(), Box<dyn std::error::Error>>
         .collect();
 
     if urls.is_empty() {
-        return Err(format!("Aucune URL trouvée dans {}", input).into());
+        return Err(format!("No URL found in {}", input).into());
     }
 
     download_pages(urls).await
 }
 
 async fn all_command(url: &str) -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 Mode Complet: Crawl + Téléchargement");
+    println!("🚀 Full Mode: Crawl + Download");
 
-    println!("\n📍 Étape 1: Crawling");
+    println!("\n📍 Step 1: Crawling");
     println!("🔍 Vérification que {} est un GitBook...", url);
 
     if !is_gitbook(url).await? {
-        return Err(format!("⚠️  {} ne semble pas être un site GitBook", url).into());
+        return Err(format!("⚠️ Checking that {} is a GitBook...", url).into());
     }
 
-    println!("✅ GitBook détecté!");
-    println!("🕷️  Extraction des liens...");
+    println!("✅ GitBook detected !");
+    println!("🕷️ Extracting links...");
 
     let links = extract_gitbook_links(url).await?;
 
-    println!("✅ {} page(s) trouvée(s)", links.len());
+    println!("✅ {} page(s) found", links.len());
 
-    println!("\n📍 Étape 2: Téléchargement");
+    println!("\n📍 Step 2: Downloading");
     download_pages(links.into_iter().collect()).await
 }
 
 async fn download_pages(mut urls: HashSet<String>) -> Result<(), Box<dyn std::error::Error>> {
-    println!("📥 Téléchargement de {} page(s)...", urls.len());
+    println!("📥 Downloading {} page(s)...", urls.len());
 
     let new_urls_with_md = urls
         .drain()
@@ -145,24 +145,21 @@ async fn download_pages(mut urls: HashSet<String>) -> Result<(), Box<dyn std::er
         match result {
             Ok(url) => {
                 success_count += 1;
-                println!("✅ Page sauvegardée: {}", url);
+                println!("✅ Page saved: {}", url);
             }
             Err(e) => {
                 error_count += 1;
-                eprintln!("❌ Erreur: {:?}", e);
+                eprintln!("❌ Error: {:?}", e);
             }
         }
     }
 
-    println!("\n📊 Résumé:");
-    println!("  ✅ Succès: {}", success_count);
-    println!("  ❌ Erreurs: {}", error_count);
+    println!("\n📊 Summary:");
+    println!("  ✅ Success: {}", success_count);
+    println!("  ❌ Errors: {}", error_count);
 
     if error_count > 0 {
-        println!(
-            "\n⚠️  {} page(s) n'ont pas pu être téléchargées",
-            error_count
-        );
+        println!("\n⚠️  {} page(s) could not be downloaded", error_count);
     }
 
     Ok(())

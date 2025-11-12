@@ -1,11 +1,10 @@
 //! # gitbook2text
 //!
-//! Une bibliothèque et outil CLI pour télécharger des pages GitBook et les convertir
-//! en markdown et texte brut.
+//! A library and CLI tool to download GitBook pages and convert them into markdown and plain text.
 //!
 //! ## Exemples
 //!
-//! ### Crawling d'un GitBook
+//! ### Crawling a GitBook
 //!
 //! ```no_run
 //! use gitbook2text::{is_gitbook, extract_gitbook_links};
@@ -22,7 +21,7 @@
 //! }
 //! ```
 //!
-//! ### Téléchargement et conversion
+//! ### Download and conversion
 //!
 //! ```no_run
 //! use gitbook2text::{download_page, markdown_to_text, txt_sanitize};
@@ -58,10 +57,10 @@ pub enum GitBookError {
 impl std::fmt::Display for GitBookError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            GitBookError::NetworkError(e) => write!(f, "Erreur réseau: {}", e),
-            GitBookError::IoError(e) => write!(f, "Erreur I/O: {}", e),
-            GitBookError::InvalidUrl(url) => write!(f, "URL invalide: {}", url),
-            GitBookError::NotAGitBook(url) => write!(f, "{} n'est pas un GitBook", url),
+            GitBookError::NetworkError(e) => write!(f, "Network error: {}", e),
+            GitBookError::IoError(e) => write!(f, "I/O Error: {}", e),
+            GitBookError::InvalidUrl(url) => write!(f, "Invalid URL: {}", url),
+            GitBookError::NotAGitBook(url) => write!(f, "{} is not a GitBook", url),
         }
     }
 }

@@ -2,11 +2,11 @@ use scraper::{Html, Selector};
 use std::collections::HashSet;
 use url::Url;
 
-/// Vérifie si une URL pointe vers un site GitBook
+/// Checks if a URL points to a GitBook site
 ///
 /// # Arguments
 ///
-/// * `url` - L'URL à vérifier
+/// * `url` - The URL to check
 ///
 /// # Exemples
 ///
@@ -36,11 +36,11 @@ pub async fn is_gitbook(url: &str) -> Result<bool, Box<dyn std::error::Error>> {
         .any(|&indicator| html_lower.contains(indicator)))
 }
 
-/// Extrait tous les liens de documentation d'un site GitBook
+/// Extracts all documentation links from a GitBook site
 ///
 /// # Arguments
 ///
-/// * `base_url` - L'URL de base du GitBook
+/// * `base_url` - The base URL of the GitBook
 ///
 /// # Exemples
 ///
@@ -82,10 +82,7 @@ pub async fn extract_gitbook_links(
         let response = match client.get(&current_url).send().await {
             Ok(r) => r,
             Err(e) => {
-                eprintln!(
-                    "⚠️  Erreur lors de la récupération de {}: {}",
-                    current_url, e
-                );
+                eprintln!("⚠️ Error while retrieving {}: {}", current_url, e);
                 continue;
             }
         };
@@ -93,7 +90,7 @@ pub async fn extract_gitbook_links(
         let html = match response.text().await {
             Ok(h) => h,
             Err(e) => {
-                eprintln!("⚠️  Erreur lors de la lecture du HTML: {}", e);
+                eprintln!("⚠️ Error while reading HTML: {}", e);
                 continue;
             }
         };
@@ -133,12 +130,12 @@ pub async fn extract_gitbook_links(
     Ok(result)
 }
 
-/// Extrait les liens d'un GitBook et les sauvegarde dans un fichier
+/// Extracts links from a GitBook and saves them to a file
 ///
 /// # Arguments
 ///
-/// * `base_url` - L'URL de base du GitBook
-/// * `output_file` - Le chemin du fichier de sortie (par défaut: "links.txt")
+/// * `base_url` - The base URL of the GitBook
+/// * `output_file` - The path to the output file (default: "links.txt")
 ///
 /// # Exemples
 ///
@@ -155,21 +152,21 @@ pub async fn crawl_and_save(
     base_url: &str,
     output_file: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    println!("🔍 Vérification que {} est un GitBook...", base_url);
+    println!("🔍 Checking that {} is a GitBook...", base_url);
 
     if !is_gitbook(base_url).await? {
-        return Err(format!("⚠️  {} ne semble pas être un site GitBook", base_url).into());
+        return Err(format!("⚠️ {} does not seem to be a GitBook site", base_url).into());
     }
 
-    println!("✅ GitBook détecté!");
-    println!("🕷️  Début du crawling...");
+    println!("✅ GitBook detected !");
+    println!("🕷️ Starting crawling...");
 
     let links = extract_gitbook_links(base_url).await?;
 
     let content = links.join("\n");
     tokio::fs::write(output_file, content).await?;
 
-    println!("💾 {} liens sauvegardés dans {}", links.len(), output_file);
+    println!("💾 {} saved links in {}", links.len(), output_file);
 
     Ok(())
 }
@@ -180,8 +177,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_is_gitbook() {
-        // Ce test nécessite une connexion internet
-        // Vous pouvez le skip avec #[ignore] si nécessaire
+        // This test requires an internet connection
+        // You can skip it with #[ignore] if necessary
         let result = is_gitbook("https://docs.gitbook.com").await;
         assert!(result.is_ok());
     }
